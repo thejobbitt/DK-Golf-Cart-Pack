@@ -344,25 +344,30 @@ int HistoryTimer = T_HISTORYCHECK;
 // the startup_early_hook which by default disables the COP (TURN OFF WHEN DEBUGGING). 
 // Must be before void setup();
 //=================================================================================================
-//#ifdef __cplusplus
-//extern "C" {
-//#endif
-//void startup_early_hook() {
-//  WDOG_TOVALL = 1000;               // The next 2 lines sets the time-out value. 
-//  WDOG_TOVALH = 0;                  // VALH=1 and VALL=1000 - should get a WDT of about 1<<16+1000 = 66536ms
-//  WDOG_PRESC = 0;                   // prescaler
-//  WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN); // Enable WDG
-//}
-//#ifdef __cplusplus
-//}
-//#endif // Watchdog Timer END
+#define WATCHDOG_MILLISECONDS 5000
 
+extern "C" void startup_early_hook(void);
+
+void startup_early_hook(void) {
+  WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
+  WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
+  asm("nop");
+  asm("nop");
+  asm("nop");
+  asm("nop");
+  WDOG_TOVALH = WATCHDOG_MILLISECONDS >> 16;
+  WDOG_TOVALL = WATCHDOG_MILLISECONDS & 0xFFFF;
+  WDOG_PRESC = 0;
+  WDOG_STCTRLH = WDOG_STCTRLH_WDOGEN;
+  for (int i=0; i<8192; i++) asm("nop");
+}
+// Watchdog Timer END
 
 //=================================================================================================
 // Prototypes
 //=================================================================================================
 
-//void WatchdogReset (void);
+void WatchdogReset (void);
 
 //=================================================================================================
 // Setup
@@ -504,18 +509,18 @@ void setup(){
 
   //-STARTUP PHYSICAL INDICATION-------------------------------------------------------------------
   VERBOSE_PRINTLN("1: Green LED1 ");
-  //WatchdogReset();                             // reset the watchdog timer
+  WatchdogReset();                             // reset the watchdog timer
   digitalWrite(LED1green, HIGH);  delay(100);  // LED on for .1 second
   VERBOSE_PRINTLN("1: then go RED ");
   digitalWrite(LED1green, LOW);
-  //WatchdogReset();                             // reset the watchdog timer
+  WatchdogReset();                             // reset the watchdog timer
   digitalWrite(LED1red, HIGH);    delay(100);  // LED on for .1 second
   VERBOSE_PRINTLN("2: Green LED2");
-  //WatchdogReset();                             // reset the watchdog timer
+  WatchdogReset();                             // reset the watchdog timer
   digitalWrite(LED2green, HIGH);  delay(100);  // LED on for .1 second
   VERBOSE_PRINTLN("3: Now go RED ");
   digitalWrite(LED2green, LOW);
-  //WatchdogReset();                             // reset the watchdog timer
+  WatchdogReset();                             // reset the watchdog timer
   digitalWrite(LED2red, HIGH);    delay(100);  // LED on for .1 second
   digitalWrite(LED1green, LOW);                //leds all off
   digitalWrite(LED1red, LOW);
@@ -591,6 +596,12 @@ void setup(){
 //  interrupts();
 //  delay(1);                     
 //}
+void WatchdogReset() {
+  noInterrupts();
+  WDOG_REFRESH = 0xA602;
+  WDOG_REFRESH = 0xB480;
+  interrupts();
+}
 
 //=================================================================================================
 // CAN Send Charger Function
@@ -659,7 +670,7 @@ void loop() {
   VERBOSE_PRINT(F("  Server Address: "));  VERBOSE_PRINT(SERVER_ADDRESS); 
   VERBOSE_PRINT(F("  PS Mode: "));         VERBOSE_PRINTLN(gMode);
 
-  //WatchdogReset();  // reset timer (times out in 1 sec so make sure loop is under about 500-600msec)
+  WatchdogReset();  // reset timer (times out in 1 sec so make sure loop is under about 500-600msec)
 
   VERBOSE_PRINTLN();
   VERBOSE_PRINT(F("Secs = "));                          VERBOSE_PRINTLN(seconds);
