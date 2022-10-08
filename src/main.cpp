@@ -30,7 +30,7 @@
 //                            Blue My Sky Charger broken out, NCP18 table broken out, 
 //                            Added verbose mode and debug mode for serial output
 // 9/23/2022 NHJ      3822    Reduced number of blocks to 8 for golf cart
-const uint16_t VERSION = 3822;      // 2817 = 28th week of 2017
+#define VERSION 3822      // 2817 = 28th week of 2017
 
 //-VERBOSE MODE? MAYBE YOU WANT DEBUG?-------------------------------------------------------------
 #define VERBOSE                     // All the org serial output
@@ -162,9 +162,9 @@ const byte LIMP_OUTPUT = 18;            // on off signal to motor control at 20%
 const byte CHARGER_CONTROL = PWM2;      // 0-2-5V output for charger control near balance
 const byte CHARGER_RELAY = RELAYDR1;
 const byte MTRCONTROL_RELAY = RELAYDR2;
-const uint8_t No_Of_Cells = 20 ;              
+const uint8_t No_Of_Cells = 16 ;        // GOLF CART      
 const uint8_t NUMBER_OF_BLOCKS = 8;     // GOLF CART
-const float VPACKNOMINAL = 72.0;        // Fido is 72V system
+const float VPACKNOMINAL = 60.0;        // GOLF CART
 
 // LEARN BLOCKS
 const byte LEARN_BLOCKS_IN = 2;         // input pin 2
@@ -208,7 +208,7 @@ uint16_t Tcell_Charge_Taper_1;              // temp at witch a lowering of curre
 uint16_t Tcell_Charge_Taper_2;              // higher temp where more lowering of current should happen
 
 //-CHARGER VARIABLES-------------------------------------------------------------------------------
-const uint16_t Charge_Voltage = 830;        // max charge voltage 830 = 83.0V
+const uint16_t Charge_Voltage = 656;        // max charge voltage 830 = 83.0V
 const uint16_t Charge_Trickle_Current = 10; // trickle current 10 = 1.0A
 const uint16_t Charge_Max_Current = 200;    // max charge current 200 = 20.0A
 const uint16_t Charge_End_Current = 1;      // end charge current 1 = 0.1A
@@ -235,7 +235,7 @@ bool MtrControlRelay = 0;
 // const float VPACK_HI_CHG_LIMIT = 60.0;   // do not allow charger to raise pack > 4.20V cell x 20 cells = 84VDC
 // const float Vpack_HV_Run_Limit = 64.0;
 // const float VPACK_LO_RUN_LIMIT = 52.0;   // do not allow to run pack below 2.80V per cell x 20 cells = 58V
-const float VPACK_HI_CHG_LIMIT = 85.0;      // do not allow charger to raise pack > 4.25V cell x 20 cells = 85VDC
+const float VPACK_HI_CHG_LIMIT = 67.2;      // do not allow charger to raise pack > 4.25V cell x 20 cells = 85VDC
 // const float Vpack_HV_Run_Limit = 90.0; 
 // const float VPACK_LO_RUN_LIMIT = 58.0;   // do not allow to run pack below 2.80V per cell x 20 cells = 58V
 
@@ -344,25 +344,25 @@ int HistoryTimer = T_HISTORYCHECK;
 // the startup_early_hook which by default disables the COP (TURN OFF WHEN DEBUGGING). 
 // Must be before void setup();
 //=================================================================================================
-#ifdef __cplusplus
-extern "C" {
-#endif
-void startup_early_hook() {
-  WDOG_TOVALL = 1000;               // The next 2 lines sets the time-out value. 
-  WDOG_TOVALH = 0;                  // VALH=1 and VALL=1000 - should get a WDT of about 1<<16+1000 = 66536ms
-  WDOG_PRESC = 0;                   // prescaler
-  WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN); // Enable WDG
-}
-#ifdef __cplusplus
-}
-#endif // Watchdog Timer END
+//#ifdef __cplusplus
+//extern "C" {
+//#endif
+//void startup_early_hook() {
+//  WDOG_TOVALL = 1000;               // The next 2 lines sets the time-out value. 
+//  WDOG_TOVALH = 0;                  // VALH=1 and VALL=1000 - should get a WDT of about 1<<16+1000 = 66536ms
+//  WDOG_PRESC = 0;                   // prescaler
+//  WDOG_STCTRLH = (WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN); // Enable WDG
+//}
+//#ifdef __cplusplus
+//}
+//#endif // Watchdog Timer END
 
 
 //=================================================================================================
 // Prototypes
 //=================================================================================================
 
-void WatchdogReset (void);
+//void WatchdogReset (void);
 
 //=================================================================================================
 // Setup
@@ -504,18 +504,18 @@ void setup(){
 
   //-STARTUP PHYSICAL INDICATION-------------------------------------------------------------------
   VERBOSE_PRINTLN("1: Green LED1 ");
-  WatchdogReset();                             // reset the watchdog timer
+  //WatchdogReset();                             // reset the watchdog timer
   digitalWrite(LED1green, HIGH);  delay(100);  // LED on for .1 second
   VERBOSE_PRINTLN("1: then go RED ");
   digitalWrite(LED1green, LOW);
-  WatchdogReset();                             // reset the watchdog timer
+  //WatchdogReset();                             // reset the watchdog timer
   digitalWrite(LED1red, HIGH);    delay(100);  // LED on for .1 second
   VERBOSE_PRINTLN("2: Green LED2");
-  WatchdogReset();                             // reset the watchdog timer
+  //WatchdogReset();                             // reset the watchdog timer
   digitalWrite(LED2green, HIGH);  delay(100);  // LED on for .1 second
   VERBOSE_PRINTLN("3: Now go RED ");
   digitalWrite(LED2green, LOW);
-  WatchdogReset();                             // reset the watchdog timer
+  //WatchdogReset();                             // reset the watchdog timer
   digitalWrite(LED2red, HIGH);    delay(100);  // LED on for .1 second
   digitalWrite(LED1green, LOW);                //leds all off
   digitalWrite(LED1red, LOW);
@@ -584,13 +584,13 @@ void setup(){
 // Watchdog Function
 // the smallest delay needed between each refresh is 1ms. anything faster and it will also reboot
 //=================================================================================================
-void WatchdogReset (void) {      // reset COP watchdog timer to 1.1 sec 
-  noInterrupts(); 
-  WDOG_REFRESH = 0xA602;
-  WDOG_REFRESH = 0xB480;
-  interrupts();
-  delay(1);                     
-}
+//void WatchdogReset (void) {      // reset COP watchdog timer to 1.1 sec 
+//  noInterrupts(); 
+//  WDOG_REFRESH = 0xA602;
+//  WDOG_REFRESH = 0xB480;
+//  interrupts();
+//  delay(1);                     
+//}
 
 //=================================================================================================
 // CAN Send Charger Function
@@ -659,7 +659,7 @@ void loop() {
   VERBOSE_PRINT(F("  Server Address: "));  VERBOSE_PRINT(SERVER_ADDRESS); 
   VERBOSE_PRINT(F("  PS Mode: "));         VERBOSE_PRINTLN(gMode);
 
-  WatchdogReset();  // reset timer (times out in 1 sec so make sure loop is under about 500-600msec)
+  //WatchdogReset();  // reset timer (times out in 1 sec so make sure loop is under about 500-600msec)
 
   VERBOSE_PRINTLN();
   VERBOSE_PRINT(F("Secs = "));                          VERBOSE_PRINTLN(seconds);
