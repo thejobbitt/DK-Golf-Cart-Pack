@@ -75,33 +75,33 @@ struct DATA {
 
 //---------GLOBAL VARAIBLES------------------------------------------------------------------------
 //declare gMode vars
-uint8_t   gMode = 0;                     // default to sleep at wakeup
-const byte SLEEPMODE = 0;
-const byte PAUSEMODE = 5;
-const byte CHARGEMODE = 10;
-const byte DRIVEMODE = 15;
-const byte FAULTSHUTDOWN = 20;
-const byte MODE0 = 25;                   // temporary rename when have English names
-const byte MODE1 = 30;
-const byte MODE2 = 35;
-const byte MODE3 = 40;
-const byte MODE4 = 45;
+uint8_t   gMode           = 0;           // default to sleep at wakeup
+const byte SLEEPMODE      = 0;
+const byte PAUSEMODE      = 5;
+const byte CHARGEMODE     = 10;
+const byte DRIVEMODE      = 15;
+const byte FAULTSHUTDOWN  = 20;
+const byte MODE0          = 25;          // temporary rename when have English names
+const byte MODE1          = 30;
+const byte MODE2          = 35;
+const byte MODE3          = 40;
+const byte MODE4          = 45;
 
 //declare gFaultMode types               // faults that may cause shutdown or current limit reduction
-uint8_t  gFaultMode = 0;                 // default to no faults at wakeup
-const byte NOFAULT = 0;                  // cleared fault
-const byte OVERTEMP = 1;
-const byte UNDERTEMP = 5;
+uint8_t  gFaultMode       = 0;           // default to no faults at wakeup
+const byte NOFAULT        = 0;           // cleared fault
+const byte OVERTEMP       = 1;
+const byte UNDERTEMP      = 5;
 const byte OVERVOLT_BLOCK = 10;
-const byte OVERVOLT_CELL = 15;
+const byte OVERVOLT_CELL  = 15;
 const byte UNDERVOLT_BLOCK = 20;
 const byte UNDERVOLT_CELL = 25;
-const byte DEADV_BLOCK = 30;
-const byte DEADV_CELL = 35;
-const byte FAULTMODE0 = 40;              // temporary... rename when have English names
-const byte FAULTMODE1 = 45;
-const byte FAULTMODE2 = 50;
-const byte FAULTMODE3 = 55;
+const byte DEADV_BLOCK    = 30;
+const byte DEADV_CELL     = 35;
+const byte FAULTMODE0     = 40;           // temporary... rename when have English names
+const byte FAULTMODE1     = 45;
+const byte FAULTMODE2     = 50;
+const byte FAULTMODE3     = 55;
 
 //-CAN BUS VARIABLES-------------------------------------------------------------------------------
 const uint16_t Tx_msg_interval = 1000;   // CAN Bus message rate
@@ -162,19 +162,21 @@ const byte LIMP_OUTPUT = 18;            // on off signal to motor control at 20%
 const byte CHARGER_CONTROL = PWM2;      // 0-2-5V output for charger control near balance
 const byte CHARGER_RELAY = RELAYDR1;
 const byte MTRCONTROL_RELAY = RELAYDR2;
-const uint8_t No_Of_Cells = 16 ;        // GOLF CART      
-const uint8_t NUMBER_OF_BLOCKS = 8;     // GOLF CART
-const float VPACKNOMINAL = 60.0;        // GOLF CART
+////////////////////////////////////////////////////golf cart///////////////////////////////
 
+const uint8_t NUMBER_OF_BLOCKS  = 7;     // GOLF CART
+const uint8_t No_Of_Cells       = NUMBER_OF_BLOCKS * 2;    
+const float VPACKNOMINAL        = 52.5;        // GOLF CART
+uint8_t blockNum[NUMBER_OF_BLOCKS] = {0, 0, 0, 0, 0, 0, 0}; // the array of 8 blocks, future user configurable
+uint8_t Block_Comm_Timer[NUMBER_OF_BLOCKS] = {0, 0, 0, 0, 0, 0, 0};
+////////////////////////////////////////////////////////////////////////////////////////////
 // LEARN BLOCKS
-const byte LEARN_BLOCKS_IN = 2;         // input pin 2
-const byte LEARN_TIMEOUT = 4;           // 4 minute learn timeout
-uint8_t blockNum[NUMBER_OF_BLOCKS] = {0, 0, 0, 0, 0, 0, 0, 0}; // the array of 8 blocks, future user configurable
-bool LearnBlockSwitch = 1;              // switch used to determine if block values should be zeroed
+const byte LEARN_BLOCKS_IN      = 2;         // input pin 2
+const byte LEARN_TIMEOUT        = 4;         // 4 minute learn timeout
+bool LearnBlockSwitch           = 1;         // switch used to determine if block values should be zeroed
 
 // block array for block 'awareness'
 const uint8_t COMM_TIMEOUT = 255;       // max 4+ minute comm timeout
-uint8_t Block_Comm_Timer[NUMBER_OF_BLOCKS] = {0, 0, 0, 0, 0, 0, 0, 0};
 
 //---------CELL TYPES------------------------------------------------------------------------------
 int Cell_Type = 1;                      // default to LG type
@@ -208,36 +210,36 @@ uint16_t Tcell_Charge_Taper_1;              // temp at witch a lowering of curre
 uint16_t Tcell_Charge_Taper_2;              // higher temp where more lowering of current should happen
 
 //-CHARGER VARIABLES-------------------------------------------------------------------------------
-const uint16_t Charge_Voltage = 656;        // max charge voltage 830 = 83.0V
-const uint16_t Charge_Trickle_Current = 10; // trickle current 10 = 1.0A
-const uint16_t Charge_Max_Current = 200;    // max charge current 200 = 20.0A
-const uint16_t Charge_End_Current = 1;      // end charge current 1 = 0.1A
-uint8_t Charge_status_flag = 0;             // flag for changing charge states
-const uint8_t DO_NOT_CHARGE = 99;           // charge states
-const uint8_t TRICKLE = 0;
-const uint8_t BULK_FULL = 1;
-const uint8_t BULK_HALF = 2;
-const uint8_t BULK_QUARTER = 3;
-const uint8_t TOP_UP = 4;
-const uint8_t PAUSE = 5;
-const uint8_t COMPLETE = 6;
-static float cVoltage = 0, cCurrent = 0;    // charger output 
-elapsedMillis TOP_UP_Counter;               // counter for top up cycle if necessary
-const uint8_t Charger_Charge_Delay = 24;    // time delay between charge attempts in hours
+const uint16_t Charge_Voltage         = 574;    // max charge voltage 830 = 83.0V  ///////////////GOLF CART
+const uint16_t Charge_Trickle_Current = 10;     // trickle current 10 = 1.0A
+const uint16_t Charge_Max_Current     = 200;    // max charge current 200 = 20.0A
+const uint16_t Charge_End_Current     = 1;      // end charge current 1 = 0.1A
+uint8_t Charge_status_flag            = 0;      // flag for changing charge states
+const uint8_t DO_NOT_CHARGE           = 99;     // charge states
+const uint8_t TRICKLE                 = 0;
+const uint8_t BULK_FULL               = 1;
+const uint8_t BULK_HALF               = 2;
+const uint8_t BULK_QUARTER            = 3;
+const uint8_t TOP_UP                  = 4;
+const uint8_t PAUSE                   = 5;
+const uint8_t COMPLETE                = 6;
+static float cVoltage = 0, cCurrent   = 0;    // charger output 
+elapsedMillis TOP_UP_Counter;                 // counter for top up cycle if necessary
+const uint8_t Charger_Charge_Delay    = 24;   // time delay between charge attempts in hours
 
 //---------USER INPUT PINS-------------------------------------------------------------------------
-const byte CHARGE_INPUT = 22;               // charger presence or absence
-const byte KEYSWITCH_INPUT = 23;            // key switch on or off
+const byte CHARGE_INPUT     = 22;           // charger presence or absence
+const byte KEYSWITCH_INPUT  = 23;           // key switch on or off
 
 //---------RELAY SETTINGS AND VARS-----------------------------------------------------------------
 bool ChargeRelay = 0;
 bool MtrControlRelay = 0;
-// const float VPACK_HI_CHG_LIMIT = 60.0;   // do not allow charger to raise pack > 4.20V cell x 20 cells = 84VDC
+// const float VPACK_HI_CHG_LIMIT = 60.0;           // do not allow charger to raise pack > 4.20V cell x 20 cells = 84VDC
 // const float Vpack_HV_Run_Limit = 64.0;
-// const float VPACK_LO_RUN_LIMIT = 52.0;   // do not allow to run pack below 2.80V per cell x 20 cells = 58V
-const float VPACK_HI_CHG_LIMIT = 67.2;      // do not allow charger to raise pack > 4.25V cell x 20 cells = 85VDC
+// const float VPACK_LO_RUN_LIMIT = 52.0;           // do not allow to run pack below 2.80V per cell x 20 cells = 58V
+const float VPACK_HI_CHG_LIMIT = 4.2 * No_Of_Cells; // do not allow charger to raise pack > 4.20V cell x 20 cells = 85VDC
 // const float Vpack_HV_Run_Limit = 90.0; 
-// const float VPACK_LO_RUN_LIMIT = 58.0;   // do not allow to run pack below 2.80V per cell x 20 cells = 58V
+// const float VPACK_LO_RUN_LIMIT = 58.0;           // do not allow to run pack below 2.80V per cell x 20 cells = 58V
 
 /*
 // pwm for op amp digital dacs (note 10 bits PWM same setup as Analog DAC output)
@@ -265,10 +267,10 @@ float gAmps;                            // amps plus and minus through LEM senso
 //float gSOCv = Vnominal;               // init with a nominal value
 
 //-LED OUTPUT PINS---------------------------------------------------------------------------------
-const byte LED2red = 7;
-const byte LED2green = 8;
-const byte LED1red = 15;
-const byte LED1green = 16;
+const byte LED2red    = 7;
+const byte LED2green  = 8;
+const byte LED1red    = 15;
+const byte LED1green  = 16;
 // const int led = 13;                  //temp use of led on teensy (ALSO used as NTC4 input)
 
 //---------SPI PORT--------------------------------------------------------------------------------
@@ -280,26 +282,26 @@ const byte LED1green = 16;
 */
 
 //-HARDWARE INPUT PINS-----------------------------------------------------------------------------
-const int VSCALEDPACK = A0;             // port 14
-const int NTCambient = A3;              // port 17
-const int TPA4NC = A4;                  // port 18
-const int IDISCHG = A5;                 // current sensor discharge
-const int VBALANCE = A10;               // port 24 = POT
-const int ICHG = A11;                   // current sensor charge
+const int VSCALEDPACK = A0;   // port 14
+const int NTCambient  = A3;   // port 17
+const int TPA4NC      = A4;   // port 18
+const int IDISCHG     = A5;   // current sensor discharge
+const int VBALANCE    = A10;  // port 24 = POT
+const int ICHG        = A11;  // current sensor charge
 
 //-UNUSED PINS-------------------------------------------------------------------------------------
-const uint16_t UNUSEDA12 = A12;      
-const uint16_t UNUSEDA13 = A13;      
-const uint8_t UNUSEDA24 = 24;  
-const uint8_t UNUSEDA25 = 25;  
-const uint8_t UNUSEDA26 = 26;  
-const uint8_t UNUSEDA27 = 27;  
-const uint8_t UNUSEDA28 = 28;  
-const uint8_t UNUSEDA29 = 29;  
-const uint8_t UNUSEDA30 = 30;  
-const uint8_t UNUSEDA31 = 31;  
-const uint8_t UNUSEDA32 = 32;  
-const uint8_t UNUSEDA33 = 33;  
+const uint16_t  UNUSEDA12 = A12;      
+const uint16_t  UNUSEDA13 = A13;      
+const uint8_t   UNUSEDA24 = 24;  
+const uint8_t   UNUSEDA25 = 25;  
+const uint8_t   UNUSEDA26 = 26;  
+const uint8_t   UNUSEDA27 = 27;  
+const uint8_t   UNUSEDA28 = 28;  
+const uint8_t   UNUSEDA29 = 29;  
+const uint8_t   UNUSEDA30 = 30;  
+const uint8_t   UNUSEDA31 = 31;  
+const uint8_t   UNUSEDA32 = 32;  
+const uint8_t   UNUSEDA33 = 33;  
 
 //---------CURRRENT SENSOR VARIABLES---------------------------------------------------------------
 // @ save offset from 2.50V at this address (0-4096 counts) - start with 2.500V exactly
@@ -656,9 +658,6 @@ bool CANReceive(struct CAN_message_t &hold){
 
   return 0;
 }
-
-
-
 
 //=================================================================================================
 //  Main Loop
@@ -1257,14 +1256,14 @@ void loop() {
   VERBOSE_PRINT(" Vbat based SOC: ");  VERBOSE_PRINT(gSOCv);  VERBOSE_PRINTLN("........................... ");
   gSOCv = (Vpack + (gSOCv * 999)) / 1000.0; // average for noise reduction 
   //gSOCv = (Vpack + (gSOCv * 999)) / 1000.0; // average for noise reduction
-  if (gSOCv >= 59) TempV = gSOCv - 59;    // 59V is (almost) dead at 2.95V per cell
+  if (gSOCv >= 2.95 * No_Of_Cells) TempV = gSOCv - 2.95 * No_Of_Cells;    // 59V is (almost) dead at 2.95V per cell
   else TempV = 0;
   //TempV = Vpack - 59;    // 59V is (almost) dead at 2.95V per cell
   //Average SOCv over minutes (improvement) -  Jul 12, 2017
   
   TempV = TempV * 50;
   // limit check...
-  if (Vpack < 59) TempV = 0;
+  if (Vpack < 2.95 * No_Of_Cells) TempV = 0;
   if (TempV > MAX_PWM) TempV = MAX_PWM;     // 10 bit resolutioin - 1024 Max
 
   analogWrite(PWM1, TempV);                 // Pin 20 - PWM1 ==DAC1 == SOC output
