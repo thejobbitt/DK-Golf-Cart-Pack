@@ -30,16 +30,13 @@
 //                            Added verbose mode and debug mode for serial output
 // 9/23/2022 NHJ      3822    Reduced number of blocks to 8 for golf cart
 #define VERSION 3822      // 2817 = 28th week of 2017
-<<<<<<< Updated upstream
 
 //-VERBOSE MODE? MAYBE YOU WANT DEBUG?-------------------------------------------------------------
 #define VERBOSE                     // All the org serial output
 //#define DEBUG                       // debug data serial output 
 //#define CAN_DEBUG                   // CAN specific data
 //#define CHARGER_DEBUG               // charger specific data
-=======
 #define LG_MJ1            // define cell type before include
->>>>>>> Stashed changes
 
 #include <Arduino.h>
 #include <RHReliableDatagram.h>     // comm routines
@@ -759,7 +756,7 @@ void loop() {
   }
   float datAvg = (datSum) / n;          // find the mean
   #ifdef VERBOSE
-  //int Tambient = datAvg;                // save ambient
+  int Tambient = datAvg;                // save ambient
   #endif
   VERBOSE_PRINT(NTCambient);                    VERBOSE_PRINT(" :");
   VERBOSE_PRINT("  NTC ambient avg value: ");   VERBOSE_PRINTLN(Tambient);
