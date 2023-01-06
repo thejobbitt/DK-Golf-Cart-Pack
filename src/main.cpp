@@ -1,4 +1,3 @@
-#include <Arduino.h>
 // DK Supervisor PCB production code for Teensy 3.1 3.2   7/8/15  T Economu 
 // Used Arduino 1.6.6 for first Fido pilot run 5 packs or 50 pcs 
 // Fido using Arduino IDE 1.8.4 with Teensyduino 1.39 (Switching to Sublime Text 3 and Stino Dev Plugin)
@@ -31,6 +30,27 @@
 //                            Added verbose mode and debug mode for serial output
 // 9/23/2022 NHJ      3822    Reduced number of blocks to 8 for golf cart
 #define VERSION 3822      // 2817 = 28th week of 2017
+<<<<<<< Updated upstream
+
+//-VERBOSE MODE? MAYBE YOU WANT DEBUG?-------------------------------------------------------------
+#define VERBOSE                     // All the org serial output
+//#define DEBUG                       // debug data serial output 
+//#define CAN_DEBUG                   // CAN specific data
+//#define CHARGER_DEBUG               // charger specific data
+=======
+#define LG_MJ1            // define cell type before include
+>>>>>>> Stashed changes
+
+#include <Arduino.h>
+#include <RHReliableDatagram.h>     // comm routines
+#include <RH_NRF24.h>               // Nordic nRF24L01+
+#include <SPI.h>                    // use SPI bus to comm with RF24 radio
+#include <EEPROM.h>                 // use EEPROM to store Blocks connected to pack
+#include <FlexCAN.h>                // CAN Bus connection
+#include <elapsedMillis.h>
+#include <VERBOSE.h>
+#include <NCP18.h>
+#include <celltypes.h>
 
 //-VERBOSE MODE? MAYBE YOU WANT DEBUG?-------------------------------------------------------------
 #define VERBOSE                     // All the org serial output
@@ -38,14 +58,8 @@
 //#define CAN_DEBUG                   // CAN specific data
 //#define CHARGER_DEBUG               // charger specific data
 
-//-INCLUDES----------------------------------------------------------------------------------------
-#include <RHReliableDatagram.h>     // comm routines
-#include <RH_NRF24.h>               // Nordic nRF24L01+
-#include <SPI.h>                    // use SPI bus to comm with RF24 radio
-#include <EEPROM.h>                 // use EEPROM to store Blocks connected to pack
-#include <FlexCAN.h>                // CAN Bus connection
-#include <VERBOSE.h>
-#include <NCP18.h>
+elapsedMillis serial_data_delay_timer = 0;  // limits the serial out put to make it more readable
+uint16_t serial_data_delay = 1000;          // in milliseconds
 
 //-SERVER ADDRESS RF24-----------------------------------------------------------------------------
 // DO NOT! use 0 or 255! ---does not work!
@@ -177,37 +191,6 @@ bool LearnBlockSwitch           = 1;         // switch used to determine if bloc
 
 // block array for block 'awareness'
 const uint8_t COMM_TIMEOUT = 255;       // max 4+ minute comm timeout
-
-//---------CELL TYPES------------------------------------------------------------------------------
-int Cell_Type = 1;                      // default to LG type
-const byte  LG_MH1 = 0;                 // 3200mah
-const byte  LG_MJ1 = 1;                 // 3500mah
-const byte  SANYO_NCR18650B = 20;       // 3400mah∏
-const byte  CELLTYPE0 = 40;
-const byte  CELLTYPE1 = 60;
-const byte  CELLTYPE2 = 80;
-
-//-LITHIUM ION CELL SPEC VARIABLES-----------------------------------------------------------------
-// all variables are set in setup() based on cell type selection above
-float Vcell_HVD_Spec = 4.4;	                // threshold where alarm is set and LED goes red.
-float Vcell_Nominal_Spec;
-float Vcell_Low_Spec;                       // threshold where fans and heaters are turned off to save power
-float Vcell_LVD_Spec;  	                    // threshold where all electronics turns off......about 2VPC
-float Vcell_Balance;                        // voltage above where Cells will balance
-const float CELL_RECONNECT_V = 4.000;       // reconnect charger at this (lowest) cell voltage
-// voltages
-float Vcell_Charge_Low_Cutoff;
-float Vcell_Charge_High_Cutoff;
-float Vcell_Charge_Trickle;                 // voltage under where trickle charge should happen
-float Vcell_Charge_Bulk;                    // voltage under where the bulk of the charge should happen
-float Vcell_Charge_Off;                     // voltage above where charger should turn off
-// temperatures
-uint16_t Tcell_Charge_Low_Max_Cutoff;
-uint16_t Tcell_Charge_High_Max_Cutoff;
-uint16_t Tcell_Charge_Low_Cutoff;
-uint16_t Tcell_Charge_High_Cutoff;
-uint16_t Tcell_Charge_Taper_1;              // temp at witch a lowering of current should happen
-uint16_t Tcell_Charge_Taper_2;              // higher temp where more lowering of current should happen
 
 //-CHARGER VARIABLES-------------------------------------------------------------------------------
 const uint16_t Charge_Voltage         = 574;    // max charge voltage 830 = 83.0V  ///////////////GOLF CART
@@ -370,6 +353,7 @@ void startup_early_hook(void) {
 //=================================================================================================
 
 void WatchdogReset (void);
+void CANSendCharger(uint32_t, uint16_t, uint16_t, bool);
 
 //=================================================================================================
 // Setup
@@ -415,68 +399,6 @@ void setup(){
   //-PWM OUT---------------------------------------------------------------------------------------
   analogWriteFrequency(PWM1, PWMFREQ);    // Teensy PWM runs at 23kHz
   analogWriteResolution(DAC_RESOLUTION);  // DAC0 value 0 to 1023
-
-  //-LITHIUM CELL SPECIFICATIONS-------------------------------------------------------------------
-  if (Cell_Type == LG_MH1) {                // cell parameters for LG MH1 3200mah
-    Vcell_HVD_Spec = 4.21;                  // high voltage disconnect, 4.25 max leave room for 0.1% acc.
-    Vcell_Nominal_Spec = 3.67;
-    Vcell_Low_Spec = 2.91;                  // end voltage cutoff 2.5V is spec
-    Vcell_LVD_Spec = 2.91;                  // low voltage disconnect, all off
-    Vcell_Balance = 4.11;                   // voltage above where Cells will balance
-
-    Vcell_Charge_Low_Cutoff = 2.00;
-    Vcell_Charge_High_Cutoff = 4.20;
-    Vcell_Charge_Trickle = 2.8;             // voltage under where trickle charge should happen  
-    Vcell_Charge_Bulk = 4.05;               // voltage under where the bulk of the charge should happen
-    Vcell_Charge_Off  = 4.15;               // voltage above where charger should turn off
-
-    Tcell_Charge_Low_Max_Cutoff = NTC_0C;   // Temp where relay will turn off
-    Tcell_Charge_High_Max_Cutoff = NTC_45C; // Temp where relay will turn off
-    Tcell_Charge_Low_Cutoff = NTC_3C;       // Temp where charger will not attempt to charge
-    Tcell_Charge_High_Cutoff = NTC_43C;     // Temp where charger will not attempt to charge
-    Tcell_Charge_Taper_1 = NTC_35C;         // Temp where charger will reduce current
-    Tcell_Charge_Taper_2 = NTC_40C;         // Temp where charger will reduce current more
-  } 
-  if (Cell_Type == LG_MJ1) {                // cell parameters for LG MH1 3500mah
-    Vcell_HVD_Spec = 4.21;                  // high voltage disconnect, charger disconnected
-    Vcell_Nominal_Spec = 3.635;             // nominal voltage
-    Vcell_Low_Spec = 2.91;                  // end voltage cutoff 2.5V is spec
-    Vcell_LVD_Spec = 2.91;                  // low voltage disconnect, all off
-    Vcell_Balance = 4.11;                   // balancing voltage
-
-    Vcell_Charge_Low_Cutoff = 2.00;         // lower cutoff voltage
-    Vcell_Charge_High_Cutoff = 4.20;        // upper cutoff voltage
-    Vcell_Charge_Trickle = 2.8;             // voltage under where trickle charge should happen
-    Vcell_Charge_Bulk = 4.05;               // voltage under where the bulk of the charge should happen
-    Vcell_Charge_Off  = 4.15;               // voltage above where charger should turn off
-
-    Tcell_Charge_Low_Max_Cutoff = NTC_0C;   // Temp where relay will turn off
-    Tcell_Charge_High_Max_Cutoff = NTC_45C; // Temp where relay will turn off
-    Tcell_Charge_Low_Cutoff = NTC_3C;       // Temp where charger will not attempt to charge
-    Tcell_Charge_High_Cutoff = NTC_43C;     // Temp where charger will not attempt to charge
-    Tcell_Charge_Taper_1 = NTC_35C;         // Temp where charger will reduce current
-    Tcell_Charge_Taper_2 = NTC_40C;         // Temp where charger will reduce current more
-  }
-  if (Cell_Type == SANYO_NCR18650B) {       // cell parameters for Panasonic/Sanyo NCR18650B
-    Vcell_HVD_Spec = 4.3;
-    Vcell_Nominal_Spec = 3.7;
-    Vcell_Low_Spec = 2.9;
-    Vcell_LVD_Spec = 2.9;
-    Vcell_Balance = 3.9;
-
-    Vcell_Charge_Low_Cutoff = 2.00;
-    Vcell_Charge_High_Cutoff = 4.20;
-    Vcell_Charge_Trickle = 2.8;             // voltage under where trickle charge should happen  
-    Vcell_Charge_Bulk = 4.05;               // voltage under where the bulk of the charge should happen
-    Vcell_Charge_Off  = 4.15;               // voltage above where charger should turn off
-
-    Tcell_Charge_Low_Max_Cutoff = NTC_0C;   // Temp where relay will turn off
-    Tcell_Charge_High_Max_Cutoff = NTC_45C; // Temp where relay will turn off
-    Tcell_Charge_Low_Cutoff = NTC_3C;       // Temp where charger will not attempt to charge
-    Tcell_Charge_High_Cutoff = NTC_43C;     // Temp where charger will not attempt to charge
-    Tcell_Charge_Taper_1 = NTC_35C;         // Temp where charger will reduce current
-    Tcell_Charge_Taper_2 = NTC_40C;         // Temp where charger will reduce current more
-  }
 
   //-RELAYS SETUP--------------------------------------------------------------------------------
   pinMode(RELAYDR1, OUTPUT);          // enable digital output for turning on relays on board
@@ -545,6 +467,7 @@ void setup(){
   for (EE_address = 0; EE_address < NUMBER_OF_BLOCKS; EE_address++) {
     EE_value = EEPROM.read(EE_address);                     // read for print debug
     blockNum[EE_address] = EE_value;                        // READ EEprom at power up
+    
     VERBOSE_PRINT("READ from EEprom address:  ");   VERBOSE_PRINT(blockNum[EE_address]);   
     VERBOSE_PRINT(" = Block#: ");                   VERBOSE_PRINTLN(EE_value);
     VERBOSE_PRINT("READ from EEprom address:  ");   VERBOSE_PRINT(EE_address);   
@@ -836,7 +759,7 @@ void loop() {
   }
   float datAvg = (datSum) / n;          // find the mean
   #ifdef VERBOSE
-  int Tambient = datAvg;                // save ambient
+  //int Tambient = datAvg;                // save ambient
   #endif
   VERBOSE_PRINT(NTCambient);                    VERBOSE_PRINT(" :");
   VERBOSE_PRINT("  NTC ambient avg value: ");   VERBOSE_PRINTLN(Tambient);
@@ -1095,7 +1018,7 @@ void loop() {
     VERBOSE_PRINTLN(F("Charge Input: ON"));  
     // check cell, pack V, high T, and low T, if in spec turn on relay
     if (Hist_Highest_Vcell < Vcell_HVD_Spec && Vpack < Vpack_HVD &&
-      Hist_Highest_Tcell > Tcell_Charge_High_Max_Cutoff && Hist_Lowest_Tcell < Tcell_Charge_Low_Max_Cutoff) {
+      Hist_Highest_Tcell >Tcell_Charge_High_Max_Cutoff && Hist_Lowest_Tcell < Tcell_Charge_Low_Max_Cutoff) {
       if(gCharge_Timer == 0) {
         ChargeRelay = ON;
         VERBOSE_PRINTLN(F("Charge Relay: ON"));
